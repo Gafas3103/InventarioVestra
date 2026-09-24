@@ -1,0 +1,658 @@
+<title>Inventario Vestra</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ground:#F4F6F5; --surface:#FFFFFF; --sunk:#EBEFED; --ink:#17211F; --muted:#5B6965; --line:#D9E0DD;
+  --accent:#0D6B63; --accent-ink:#FFFFFF; --accent-soft:#DCEEEA; --accent-text:#0B5A53;
+  --warn:#B4441E; --warn-soft:#F8E4DB; --shadow:0 10px 30px rgba(18,40,36,.14);
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0F1514; --surface:#171F1D; --sunk:#1F2926; --ink:#E6EEEB; --muted:#98A7A2; --line:#2A3633;
+    --accent:#46C1B2; --accent-ink:#06201D; --accent-soft:#17332F; --accent-text:#7DD8CC;
+    --warn:#F08A63; --warn-soft:#3A221A; --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0F1514; --surface:#171F1D; --sunk:#1F2926; --ink:#E6EEEB; --muted:#98A7A2; --line:#2A3633;
+  --accent:#46C1B2; --accent-ink:#06201D; --accent-soft:#17332F; --accent-text:#7DD8CC;
+  --warn:#F08A63; --warn-soft:#3A221A; --shadow:0 10px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0}
+html,body{background:var(--ground)}
+body{color:var(--ink);font:15px/1.45 var(--body);-webkit-tap-highlight-color:transparent}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ground);padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:1200px;margin:0 auto}
+.brand{display:flex;align-items:baseline;gap:8px;margin-right:auto}
+.brand h1{font:800 26px/1 var(--display);letter-spacing:-.02em;margin:0}
+.brand span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stats{display:flex;gap:14px;font-variant-numeric:tabular-nums}
+.stat b{display:block;font:700 18px/1.1 var(--display)}
+.stat small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.cloud{background:var(--accent-soft);color:var(--accent-text)}
+.search-row{max-width:1200px;margin:10px auto 0;display:flex;flex-direction:column;gap:8px}
+.search{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:16px}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+
+/* ---------- list ---------- */
+main{padding:14px 16px 120px;max-width:1200px;margin:0 auto}
+.list{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:640px){.list{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
+.card{display:grid;grid-template-columns:84px 1fr auto;gap:12px;align-items:start;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;width:100%}
+.card:hover{border-color:var(--accent)}
+.thumb{width:84px;height:84px;border-radius:8px;object-fit:cover;background:var(--sunk);display:grid;place-items:center;color:var(--muted);font-size:11px}
+.card h3{margin:0 0 2px;font:600 15px/1.25 var(--body);overflow-wrap:anywhere}
+.meta{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.sizes{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.sz{font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:6px;background:var(--accent-soft);color:var(--accent-text);font-variant-numeric:tabular-nums}
+.sz.none{background:var(--warn-soft);color:var(--warn)}
+.note{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:5px;overflow-wrap:anywhere}
+.total{text-align:right;font-variant-numeric:tabular-nums}
+.total b{display:block;font:800 24px/1 var(--display)}
+.total small{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+
+/* ---------- bottom bar ---------- */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.bar-in{max-width:1200px;margin:0 auto;display:flex;gap:10px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 16px;font-weight:600;min-height:48px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--warn);border-color:var(--warn)}
+.btn.danger.armed{background:var(--warn);color:var(--surface)}
+.btn:disabled{opacity:.55;cursor:default}
+.bar .btn{flex:1}
+
+/* ---------- editor ---------- */
+.scrim{position:fixed;inset:0;background:rgba(10,20,18,.45);z-index:9}
+.editor{position:fixed;inset:0;z-index:10;background:var(--ground);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+@media (min-width:760px){
+  .editor{left:auto;width:min(520px,100%);border-left:1px solid var(--line);box-shadow:var(--shadow)}
+}
+.ed-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.ed-head h2{font:700 18px/1.2 var(--display);margin:0;margin-right:auto}
+.ed-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px;overscroll-behavior:contain}
+.ed-foot{display:flex;gap:8px;flex-wrap:wrap;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface)}
+.ed-foot .btn{flex:1 1 auto}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>label,.lbl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.inp{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:16px}
+textarea.inp{min-height:80px;resize:vertical}
+.sugg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.sugg::-webkit-scrollbar{display:none}
+.sugg .chip{padding:5px 11px;font-size:13px}
+.two{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:480px){.two{grid-template-columns:1fr 1fr}}
+
+.photo{position:relative;border:1.5px dashed var(--line);border-radius:var(--r);background:var(--surface);min-height:150px;display:grid;place-items:center;overflow:hidden}
+.photo img{width:100%;max-height:300px;object-fit:contain;display:block;background:var(--sunk)}
+.photo .ph-cta{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);padding:24px;text-align:center}
+.photo .ph-cta b{color:var(--accent-text);font-size:15px}
+.photo input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.ph-actions{display:flex;gap:8px;margin-top:8px}
+.ph-actions .btn{min-height:40px;padding:8px 12px;font-size:14px;flex:1;position:relative;overflow:hidden}
+.ph-actions input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+.sizes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (min-width:480px){.sizes-grid{grid-template-columns:repeat(6,1fr)}}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.step.has{border-color:var(--accent);background:var(--accent-soft)}
+.step .t{font-weight:700;font-size:13px}
+.step input{width:100%;text-align:center;border:0;background:transparent;font:700 22px/1 var(--display);font-variant-numeric:tabular-nums;padding:2px 0}
+.step .pm{display:flex;gap:4px;width:100%}
+.step .pm button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:8px;height:36px;font-size:20px;font-weight:600;line-height:1}
+.sum-line{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
+.sum-line b{font:800 20px/1 var(--display)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--ink);color:var(--ground);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+.loading{padding:60px 16px;text-align:center;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion: no-preference){
+  .editor{animation:slide .18s ease-out}
+  @keyframes slide{from{transform:translateY(12px);opacity:.6}to{transform:none;opacity:1}}
+}
+</style>
+
+<header class="top">
+  <div class="top-row">
+    <div class="brand"><h1>Vestra</h1><span>Inventario</span></div>
+    <div class="stats">
+      <div class="stat"><b id="stRefs">–</b><small>Referencias</small></div>
+      <div class="stat"><b id="stUnits">–</b><small>Unidades</small></div>
+    </div>
+    <span class="pill" id="modePill">Conectando…</span>
+  </div>
+  <div class="search-row">
+    <label class="sr" for="q">Buscar</label>
+    <input class="search" id="q" type="search" placeholder="Buscar referencia, color, modelo, comentario…" autocomplete="off">
+    <div class="filters" id="filters" role="toolbar" aria-label="Filtrar por enfoque"></div>
+  </div>
+</header>
+
+<main>
+  <div id="list" class="list"><div class="loading">Cargando inventario…</div></div>
+</main>
+
+<div class="bar">
+  <div class="bar-in">
+    <button class="btn" id="btnExport" type="button">Descargar Excel</button>
+    <button class="btn primary" id="btnNew" type="button">+ Nueva prenda</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="editor" id="editor" hidden aria-labelledby="edTitle" role="dialog">
+  <div class="ed-head">
+    <h2 id="edTitle">Nueva prenda</h2>
+    <button class="btn" id="btnClose" type="button" style="min-height:40px;padding:8px 14px">Cerrar</button>
+  </div>
+  <form class="ed-body" id="form" autocomplete="off">
+    <div>
+      <div class="lbl" style="margin-bottom:6px">Foto</div>
+      <div class="photo" id="photoBox"></div>
+      <div class="ph-actions" id="phActions" hidden>
+        <span class="btn">Cambiar foto<input type="file" accept="image/*" id="fPhoto2" aria-label="Cambiar foto"></span>
+        <button class="btn" type="button" id="btnRmPhoto">Quitar foto</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="fRef">Referencia</label>
+      <input class="inp" id="fRef" required placeholder="Ej: Cuello V Militar - Corazones">
+    </div>
+
+    <div class="field">
+      <div class="sum-line"><span class="lbl">Tallas</span><span><small style="color:var(--muted)">CANT </small><b id="sumT">0</b></span></div>
+      <div class="sizes-grid" id="sizesGrid"></div>
+    </div>
+
+    <div class="two">
+      <div class="field" data-f="tipo"><label for="f_tipo">Tipo</label><input class="inp" id="f_tipo" placeholder="Blusa"><div class="sugg"></div></div>
+      <div class="field" data-f="color"><label for="f_color">Color</label><input class="inp" id="f_color" placeholder="Azul oscuro"><div class="sugg"></div></div>
+    </div>
+    <div class="field" data-f="modelo"><label for="f_modelo">Modelo</label><input class="inp" id="f_modelo" placeholder="Cuello V Militar"><div class="sugg"></div></div>
+    <div class="two">
+      <div class="field" data-f="enfoque"><label for="f_enfoque">Enfoque</label><input class="inp" id="f_enfoque" placeholder="Médico"><div class="sugg"></div></div>
+      <div class="field" data-f="genero"><label for="f_genero">Género</label><input class="inp" id="f_genero" placeholder="Mujer"><div class="sugg"></div></div>
+    </div>
+    <div class="field" data-f="tela"><label for="f_tela">Tipo de tela</label><input class="inp" id="f_tela" placeholder="Rígida"><div class="sugg"></div></div>
+
+    <div class="field">
+      <label for="fCom">Comentarios</label>
+      <textarea class="inp" id="fCom" placeholder="Ej: Todas bordadas menos la M y L · precio 45.000"></textarea>
+    </div>
+  </form>
+  <div class="ed-foot">
+    <button class="btn danger" type="button" id="btnDel" hidden>Eliminar</button>
+    <button class="btn" type="button" id="btnDup" hidden>Duplicar</button>
+    <button class="btn" type="button" id="btnSaveNext">Guardar y otra</button>
+    <button class="btn primary" type="submit" form="form" id="btnSave">Guardar</button>
+  </div>
+</section>
+
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script>
+(() => {
+const SIZES = ['XS','S','M','L','XL','XXL'];
+const TEXT_FIELDS = ['tipo','color','modelo','enfoque','genero','tela'];
+const KEEP_ON_NEXT = ['tipo','modelo','enfoque','genero','tela'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const total = it => SIZES.reduce((a,k) => a + (Number(it.tallas?.[k]) || 0), 0);
+const norm = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+
+let items = [];
+let query = '', filter = '';
+let draft = null;          // {id, isNew, ...fields, tallas, foto, fotoData, pendingBlob, pendingUrl}
+let toastT;
+
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3200);
+}
+
+/* ================= storage ================= */
+const Store = {
+  mode: 'init', db: null, assets: null, downloads: null,
+  newId(){
+    if (this.mode === 'cloud') return this.db.collection('prendas').doc().id;
+    return (crypto.randomUUID ? crypto.randomUUID() : 'p' + Date.now() + Math.random().toString(36).slice(2));
+  },
+  photoSrc(it){ return it.foto ? '/_blob/' + it.foto : (it.fotoData || ''); },
+  async save(it){
+    const body = {
+      orden: it.orden, ref: it.ref, tipo: it.tipo, tallas: it.tallas, color: it.color, modelo: it.modelo,
+      enfoque: it.enfoque, genero: it.genero, tela: it.tela, comentarios: it.comentarios,
+      foto: it.foto || '', actualizado: Date.now()
+    };
+    if (this.mode === 'cloud') { await this.db.collection('prendas').doc(it.id).set(body); return; }
+    body.fotoData = it.fotoData || '';
+    const rec = {id: it.id, ...body};
+    await idbPut(rec);
+    const i = items.findIndex(x => x.id === it.id);
+    if (i >= 0) items[i] = rec; else items.push(rec);
+    render();
+  },
+  async remove(it){
+    if (this.mode === 'cloud') {
+      await this.db.collection('prendas').doc(it.id).delete();
+      await this.dropPhoto(it.foto, it.id);
+      return;
+    }
+    await idbDel(it.id);
+    items = items.filter(x => x.id !== it.id); render();
+  },
+  async dropPhoto(fotoId, exceptId){
+    if (!fotoId || !this.assets) return;
+    if (items.some(x => x.id !== exceptId && x.foto === fotoId)) return; // shared by a duplicate
+    try { await this.assets.delete(fotoId); } catch(e) {}
+  },
+  // returns {foto} for cloud or {fotoData} for local
+  async storePhoto(blob){
+    if (this.mode === 'cloud') {
+      if (!this.assets) throw {message:'No tienes permiso para subir fotos en esta vista.'};
+      const r = await this.assets.upload(blob, {type:'image/jpeg'});
+      return {foto: r.id};
+    }
+    const small = await resizeImage(blob, 700, .78);
+    return {fotoData: await blobToDataUrl(small)};
+  }
+};
+
+// ---- IndexedDB (local mode) ----
+let idb = null;
+function idbOpen(){
+  return new Promise(res => {
+    try {
+      const rq = indexedDB.open('vestra-inventario', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('prendas', {keyPath:'id'});
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = () => res(null);
+    } catch(e){ res(null); }
+  });
+}
+function idbTx(mode, fn){
+  return new Promise(res => {
+    if (!idb) return res(null);
+    try {
+      const tx = idb.transaction('prendas', mode); const st = tx.objectStore('prendas');
+      const r = fn(st); tx.oncomplete = () => res(r && r.result); tx.onerror = () => res(null);
+    } catch(e){ res(null); }
+  });
+}
+const idbAll = () => idbTx('readonly', st => st.getAll());
+const idbPut = rec => idbTx('readwrite', st => st.put(rec));
+const idbDel = id => idbTx('readwrite', st => st.delete(id));
+
+async function boot(){
+  const c = window.claude;
+  let db = null;
+  if (c && typeof c.use === 'function') {
+    try { db = await c.use('db'); } catch(e){ db = null; }
+  }
+  if (db) {
+    Store.mode = 'cloud'; Store.db = db;
+    c.use('assets').then(a => Store.assets = a).catch(() => {});
+    c.use('downloads').then(d => Store.downloads = d).catch(() => {});
+    $('modePill').textContent = 'Guardado en la nube'; $('modePill').className = 'pill cloud';
+    db.collection('prendas').onSnapshot(snap => {
+      items = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      render();
+    }, err => {
+      toast('Se perdió la conexión con el inventario. Recarga la página.');
+    });
+  } else {
+    Store.mode = 'local';
+    $('modePill').textContent = 'Solo en este dispositivo';
+    idb = await idbOpen();
+    items = (await idbAll()) || [];
+    render();
+  }
+}
+
+/* ================= images ================= */
+function loadImg(src){
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+}
+async function resizeImage(blob, max, q){
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await loadImg(url);
+    const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(img.naturalWidth * s); cv.height = Math.round(img.naturalHeight * s);
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,cv.width,cv.height);
+    cx.drawImage(img, 0, 0, cv.width, cv.height);
+    return await new Promise(r => cv.toBlob(r, 'image/jpeg', q));
+  } finally { URL.revokeObjectURL(url); }
+}
+function blobToDataUrl(b){
+  return new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
+}
+async function srcToJpeg(src, max){
+  const img = await loadImg(src);
+  const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(img.naturalWidth * s); cv.height = Math.round(img.naturalHeight * s);
+  const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,cv.width,cv.height);
+  cx.drawImage(img, 0, 0, cv.width, cv.height);
+  return {data: cv.toDataURL('image/jpeg', .8), w: cv.width, h: cv.height};
+}
+
+/* ================= list ================= */
+function visible(){
+  const q = norm(query);
+  return items
+    .filter(it => !filter || (filter === '__agotadas' ? total(it) === 0 : norm(it.enfoque) === filter))
+    .filter(it => !q || norm([it.ref, it.tipo, it.color, it.modelo, it.enfoque, it.tela, it.comentarios].join(' ')).includes(q))
+    .sort((a,b) => (b.orden||0) - (a.orden||0));
+}
+function renderFilters(){
+  const counts = new Map();
+  items.forEach(it => {
+    const k = norm(it.enfoque); if (!k) return;
+    if (!counts.has(k)) counts.set(k, {n:0, label: it.enfoque.trim()});
+    counts.get(k).n++;
+  });
+  const opts = [['', 'Todas']].concat([...counts.entries()].sort((a,b) => b[1].n - a[1].n).map(([k,v]) => [k, v.label]));
+  opts.push(['__agotadas', 'Agotadas']);
+  if (filter && !opts.some(o => o[0] === filter)) filter = '';
+  $('filters').innerHTML = opts.map(([k,l]) => `<button class="chip" type="button" data-k="${esc(k)}" aria-pressed="${k===filter}">${esc(l)}</button>`).join('');
+}
+function render(){
+  $('stRefs').textContent = items.length;
+  $('stUnits').textContent = items.reduce((a,it) => a + total(it), 0);
+  renderFilters();
+  const list = visible();
+  if (!items.length) { $('list').innerHTML = `<div class="empty">Todavía no hay prendas. Toca <b>+ Nueva prenda</b> para empezar.</div>`; return; }
+  if (!list.length) { $('list').innerHTML = `<div class="empty">Nada coincide con la búsqueda.</div>`; return; }
+  $('list').innerHTML = list.map(it => {
+    const src = Store.photoSrc(it); const t = total(it);
+    const sz = SIZES.filter(k => it.tallas?.[k]).map(k => `<span class="sz">${k} ${it.tallas[k]}</span>`).join('') || '<span class="sz none">Sin unidades</span>';
+    const meta = [it.tipo, it.genero, it.tela].filter(Boolean).map(esc).join(' · ');
+    const meta2 = [it.color, it.modelo, it.enfoque].filter(Boolean).map(esc).join(' · ');
+    return `<button class="card" type="button" data-id="${esc(it.id)}">
+      ${src ? `<img class="thumb" src="${esc(src)}" alt="" loading="lazy">` : `<div class="thumb">Sin foto</div>`}
+      <div>
+        <h3>${esc(it.ref) || '<i>Sin referencia</i>'}</h3>
+        ${meta ? `<div class="meta">${meta}</div>` : ''}
+        ${meta2 ? `<div class="meta">${meta2}</div>` : ''}
+        <div class="sizes">${sz}</div>
+        ${it.comentarios ? `<div class="note">${esc(it.comentarios)}</div>` : ''}
+      </div>
+      <div class="total"><b>${t}</b><small>Cant</small></div>
+    </button>`;
+  }).join('');
+}
+
+/* ================= editor ================= */
+function blank(){
+  return {id: Store.newId(), isNew: true, orden: Date.now(), ref:'', tipo:'', color:'', modelo:'', enfoque:'', genero:'', tela:'', comentarios:'', tallas:{}, foto:'', fotoData:''};
+}
+function openEditor(d){
+  draft = d;
+  $('edTitle').textContent = d.isNew ? 'Nueva prenda' : 'Editar prenda';
+  $('fRef').value = d.ref || '';
+  TEXT_FIELDS.forEach(f => $('f_' + f).value = d[f] || '');
+  $('fCom').value = d.comentarios || '';
+  $('btnDel').hidden = d.isNew; $('btnDup').hidden = d.isNew;
+  disarmDelete();
+  renderSizes(); renderPhoto(); TEXT_FIELDS.forEach(renderSugg);
+  $('editor').hidden = false; $('scrim').hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('form').scrollTop = 0;
+  if (d.isNew && matchMedia('(min-width:760px)').matches) setTimeout(() => $('fRef').focus(), 50);
+}
+function closeEditor(){
+  if (draft?.pendingUrl) URL.revokeObjectURL(draft.pendingUrl);
+  draft = null; $('editor').hidden = true; $('scrim').hidden = true; document.body.style.overflow = '';
+}
+function readForm(){
+  draft.ref = $('fRef').value.trim();
+  TEXT_FIELDS.forEach(f => draft[f] = $('f_' + f).value.trim());
+  draft.comentarios = $('fCom').value.trim();
+}
+
+function renderSizes(){
+  $('sizesGrid').innerHTML = SIZES.map(k => {
+    const v = draft.tallas[k] || 0;
+    return `<div class="step${v ? ' has' : ''}" data-k="${k}">
+      <span class="t">${k}</span>
+      <input inputmode="numeric" pattern="[0-9]*" id="sz_${k}" aria-label="Talla ${k}" value="${v || ''}" placeholder="0">
+      <div class="pm"><button type="button" data-d="-1" aria-label="Quitar una ${k}">−</button><button type="button" data-d="1" aria-label="Sumar una ${k}">+</button></div>
+    </div>`;
+  }).join('');
+  updateSum();
+}
+function setSize(k, v){
+  v = Math.max(0, Math.floor(Number(v) || 0));
+  if (v) draft.tallas[k] = v; else delete draft.tallas[k];
+  const box = $('sizesGrid').querySelector(`[data-k="${k}"]`);
+  box.classList.toggle('has', !!v);
+  const inp = box.querySelector('input'); if (document.activeElement !== inp) inp.value = v || '';
+  updateSum();
+}
+function updateSum(){ $('sumT').textContent = total(draft); }
+
+function renderPhoto(){
+  const src = draft.pendingUrl || (draft.foto ? '/_blob/' + draft.foto : draft.fotoData);
+  $('photoBox').innerHTML = src
+    ? `<img src="${esc(src)}" alt="Foto de la prenda">`
+    : `<div class="ph-cta"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><b>Tomar o elegir foto</b><span>Toca aquí para usar la cámara o la galería</span></div><input type="file" accept="image/*" id="fPhoto" aria-label="Agregar foto">`;
+  $('phActions').hidden = !src;
+}
+async function pickPhoto(file){
+  if (!file) return;
+  try {
+    const blob = await resizeImage(file, 1100, .82);
+    if (draft.pendingUrl) URL.revokeObjectURL(draft.pendingUrl);
+    draft.pendingBlob = blob; draft.pendingUrl = URL.createObjectURL(blob);
+    renderPhoto();
+  } catch(e){ toast('No se pudo leer esa imagen. Prueba con otra foto.'); }
+}
+
+function suggestions(f){
+  const m = new Map();
+  items.forEach(it => { const v = (it[f]||'').trim(); if (!v) return; const k = norm(v); const e = m.get(k) || {v, n:0}; e.n++; m.set(k, e); });
+  return [...m.values()].sort((a,b) => b.n - a.n).map(e => e.v);
+}
+function renderSugg(f){
+  const box = document.querySelector(`[data-f="${f}"] .sugg`);
+  const cur = norm($('f_' + f).value);
+  const list = suggestions(f).filter(v => !cur || (norm(v).includes(cur) && norm(v) !== cur)).slice(0, 10);
+  box.innerHTML = list.map(v => `<button type="button" class="chip" data-v="${esc(v)}">${esc(v)}</button>`).join('');
+  box.hidden = !list.length;
+}
+
+let saving = false;
+async function save(next){
+  if (saving) return;
+  readForm();
+  if (!draft.ref) { $('fRef').focus(); toast('Escribe la referencia para guardar.'); return; }
+  saving = true; setBusy(true);
+  const d = draft; const oldFoto = d.origFoto;
+  try {
+    if (d.pendingBlob) {
+      const r = await Store.storePhoto(d.pendingBlob);
+      d.foto = r.foto || ''; d.fotoData = r.fotoData || '';
+    }
+    await Store.save(d);
+    if (Store.mode === 'cloud' && oldFoto && oldFoto !== d.foto) await Store.dropPhoto(oldFoto, d.id);
+    toast(d.isNew ? 'Prenda guardada' : 'Cambios guardados');
+    if (next) {
+      const n = blank(); KEEP_ON_NEXT.forEach(k => n[k] = d[k]);
+      if (d.pendingUrl) URL.revokeObjectURL(d.pendingUrl);
+      openEditor(n);
+      setTimeout(() => $('fRef').focus(), 50);
+    } else closeEditor();
+  } catch(e){
+    toast(e?.code === 'quota_or_state' ? 'Se llenó el espacio de fotos. Borra prendas viejas.' : 'No se pudo guardar. Revisa tu conexión e intenta de nuevo.');
+  } finally { saving = false; setBusy(false); }
+}
+function setBusy(b){ ['btnSave','btnSaveNext','btnDel','btnDup'].forEach(id => $(id).disabled = b); $('btnSave').textContent = b ? 'Guardando…' : 'Guardar'; }
+
+let armT;
+function disarmDelete(){ clearTimeout(armT); $('btnDel').classList.remove('armed'); $('btnDel').textContent = 'Eliminar'; }
+async function onDelete(){
+  const b = $('btnDel');
+  if (!b.classList.contains('armed')) {
+    b.classList.add('armed'); b.textContent = 'Toca otra vez para borrar';
+    armT = setTimeout(disarmDelete, 4000); return;
+  }
+  disarmDelete(); setBusy(true);
+  try { await Store.remove(items.find(x => x.id === draft.id) || draft); toast('Prenda eliminada'); closeEditor(); }
+  catch(e){ toast('No se pudo eliminar. Intenta de nuevo.'); }
+  finally { setBusy(false); }
+}
+function onDuplicate(){
+  readForm();
+  const src = draft;
+  const n = blank();
+  ['ref', ...TEXT_FIELDS, 'comentarios', 'foto', 'fotoData'].forEach(k => n[k] = src[k]);
+  n.tallas = {...src.tallas};
+  n.ref = src.ref ? src.ref + ' (copia)' : '';
+  if (src.pendingBlob) { n.pendingBlob = src.pendingBlob; n.pendingUrl = URL.createObjectURL(src.pendingBlob); }
+  openEditor(n);
+  toast('Copia lista: cambia lo necesario y guarda');
+}
+
+/* ================= excel ================= */
+async function exportExcel(){
+  if (!window.ExcelJS) { toast('No cargó el generador de Excel. Revisa tu conexión y recarga.'); return; }
+  if (!items.length) { toast('No hay prendas para exportar.'); return; }
+  const btn = $('btnExport'); btn.disabled = true; btn.textContent = 'Preparando…';
+  try {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Hoja 1', {views:[{state:'frozen', ySplit:1}]});
+    const heads = ['REFERENCIA','TIPO','CANT',...SIZES,'COLOR','MODELO','ENFOQUE','GENERO','Tipo Tela','FOTO','COMENTARIOS'];
+    const widths = [40,12,8,6,6,6,6,6,6,18,28,16,12,12,26,40];
+    ws.columns = heads.map((h,i) => ({header:h, width:widths[i]}));
+    const hr = ws.getRow(1); hr.height = 22.5;
+    hr.eachCell(c => {
+      c.font = {bold:true, color:{argb:'FFFFFFFF'}};
+      c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF0D6B63'}};
+      c.alignment = {vertical:'middle', horizontal:'center'};
+    });
+    const rows = [...items].sort((a,b) => (a.orden||0) - (b.orden||0));
+    for (const it of rows) {
+      const row = ws.addRow([
+        it.ref||'', it.tipo||'', null, ...SIZES.map(k => it.tallas?.[k] || null),
+        it.color||'', it.modelo||'', it.enfoque||'', it.genero||'', it.tela||'', '', it.comentarios||''
+      ]);
+      const r = row.number;
+      ws.getCell(`C${r}`).value = {formula:`SUM(D${r}:I${r})`, result: total(it)};
+      row.eachCell({includeEmpty:true}, (c, col) => {
+        c.alignment = {vertical:'middle', wrapText: col === 1 || col >= 10, horizontal: (col >= 3 && col <= 9) ? 'center' : 'left'};
+      });
+      const src = Store.photoSrc(it);
+      row.height = src ? 111 : 24;
+      if (src) {
+        try {
+          const j = await srcToJpeg(src, 420);
+          const maxH = 140, maxW = 180, s = Math.min(maxW / j.w, maxH / j.h);
+          const id = wb.addImage({base64: j.data, extension:'jpeg'});
+          ws.addImage(id, {tl:{col:14.05, row:r - 1 + .03}, ext:{width: Math.round(j.w * s), height: Math.round(j.h * s)}, editAs:'oneCell'});
+        } catch(e){ ws.getCell(`O${r}`).value = '(foto no disponible)'; }
+      }
+    }
+    ws.autoFilter = 'A1:P1';
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const d = new Date(); const pad = n => String(n).padStart(2,'0');
+    const filename = `Inventario Vestra ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.xlsx`;
+    if (Store.downloads) {
+      try { await Store.downloads.save({filename, data: blob}); toast('Excel listo'); }
+      catch(e){
+        if (e?.code === 'declined') toast('Descarga cancelada');
+        else if (e?.code === 'rate_limited') toast('Ya hay una descarga abierta. Espera un momento.');
+        else toast('No se pudo descargar aquí. Abre la página en el navegador.');
+      }
+    } else if (Store.mode === 'local') {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast('Excel descargado');
+    } else {
+      toast('Las descargas no están disponibles en esta vista.');
+    }
+  } catch(e){
+    toast('No se pudo crear el Excel. Intenta de nuevo.');
+  } finally { btn.disabled = false; btn.textContent = 'Descargar Excel'; }
+}
+
+/* ================= events ================= */
+$('q').addEventListener('input', e => { query = e.target.value; render(); });
+$('filters').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  filter = b.dataset.k === filter ? '' : b.dataset.k; render();
+});
+$('list').addEventListener('click', e => {
+  const c = e.target.closest('.card'); if (!c) return;
+  const it = items.find(x => x.id === c.dataset.id); if (!it) return;
+  openEditor({...it, tallas:{...(it.tallas||{})}, isNew:false, origFoto: it.foto || ''});
+});
+$('btnNew').addEventListener('click', () => openEditor(blank()));
+$('btnClose').addEventListener('click', closeEditor);
+$('scrim').addEventListener('click', closeEditor);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && draft) closeEditor(); });
+$('form').addEventListener('submit', e => { e.preventDefault(); save(false); });
+$('btnSaveNext').addEventListener('click', () => save(true));
+$('btnDel').addEventListener('click', onDelete);
+$('btnDup').addEventListener('click', onDuplicate);
+$('btnExport').addEventListener('click', exportExcel);
+
+$('sizesGrid').addEventListener('click', e => {
+  const b = e.target.closest('button[data-d]'); if (!b) return;
+  const k = b.closest('.step').dataset.k;
+  setSize(k, (draft.tallas[k] || 0) + Number(b.dataset.d));
+  $('sz_' + k).value = draft.tallas[k] || '';
+});
+$('sizesGrid').addEventListener('input', e => {
+  if (e.target.tagName !== 'INPUT') return;
+  e.target.value = e.target.value.replace(/\D/g,'');
+  setSize(e.target.closest('.step').dataset.k, e.target.value);
+});
+$('sizesGrid').addEventListener('focusin', e => { if (e.target.tagName === 'INPUT') e.target.select(); });
+
+TEXT_FIELDS.forEach(f => {
+  const wrap = document.querySelector(`[data-f="${f}"]`);
+  $('f_' + f).addEventListener('input', () => renderSugg(f));
+  wrap.querySelector('.sugg').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    $('f_' + f).value = b.dataset.v; renderSugg(f);
+  });
+});
+
+$('editor').addEventListener('change', e => {
+  if (e.target.id === 'fPhoto' || e.target.id === 'fPhoto2') { pickPhoto(e.target.files[0]); e.target.value = ''; }
+});
+$('btnRmPhoto').addEventListener('click', () => {
+  if (draft.pendingUrl) URL.revokeObjectURL(draft.pendingUrl);
+  draft.pendingBlob = null; draft.pendingUrl = ''; draft.foto = ''; draft.fotoData = '';
+  renderPhoto();
+});
+
+boot();
+})();
+</script>
